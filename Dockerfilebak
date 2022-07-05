@@ -11,34 +11,34 @@ ENV DOCROOT=/var/www/html
 
 RUN yum install -y --disableplugin=subscription-manager httpd && \
     yum clean all --disableplugin=subscription-manager -y && \
-    rm -rf /run/httpd && mkdir /run/httpd  && \
-    echo "Hello from the httpd-parent container!" > ${DOCROOT}/index.html  && \
-    adduser ex288-sa --system && \
+    echo "Hello from the httpd-parent container!" > ${DOCROOT}/index.html && \
     sed -i "s/Listen 80/Listen 8080/g" /etc/httpd/conf/httpd.conf && \
     sed -i "s/#ServerName www.example.com:80/ServerName 0.0.0.0:8080/g" /etc/httpd/conf/httpd.conf && \
-    chown -R ex288-sa:0 /var/log/httpd /var/run/httpd /etc/httpd/run /etc/httpd/logs /run/httpd && \
-    chmod -R 755 /var/log/httpd /var/run/httpd /etc/httpd/run /etc/httpd/logs /run/httpd 
+    #adduser ex288-sa --system && \
+    chgrp -R 0 /var/log/httpd /var/run/httpd /etc/httpd/logs && \
+    #chown -R ex288-sa:0 /var/log/httpd /var/run/httpd /etc/httpd/logs && \
+    chmod -R g=u /var/log/httpd /var/run/httpd /etc/httpd/logs && \
+    rm -rf /run/httpd && mkdir /run/httpd
 
-    #chgrp -R 0 /var/log/httpd /var/run/httpd /etc/httpd/run /etc/httpd/logs /run/httpd && \
-    #chmod -R g=u /var/log/httpd /var/run/httpd /etc/httpd/run /etc/httpd/logs /run/httpd 
-
+    #chgrp -R 0 /var/log/httpd /var/run/httpd && \
+    #chmod -R g=u /var/log/httpd /var/run/httpd  && \
+    #rm -rf /run/httpd && mkdir /run/httpd
 	
 # Allows child images to inject their own content into DocumentRoot
 ONBUILD COPY src/ ${DOCROOT}/
 
 EXPOSE 8080
 
-#D This stuff is needed to ensure a clean start
-
+# This stuff is needed to ensure a clean start
+#RUN rm -rf /run/httpd && mkdir /run/httpd
 COPY ./start-apache.sh /run/httpd/.
 
-#USER 1001
-
 # Run as the root user
-USER ex288-sa
+USER 1001
+#USER ex288-sa
 
 # Launch httpd
-#CMD /usr/sbin/httpd -DFOREGROUND
-CMD /run/httpd/start-apache.sh
+#CMD /run/httpd/start-apache.sh
+CMD /usr/sbin/httpd -DFOREGROUND
 
 
